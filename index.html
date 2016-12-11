@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Websocket tutorial</title>
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+  <h1>
+    RESOLUÇÃO DE PROBLEMAS DE FILMES
+  </h1>
+  <h3>Pessoas conectadas:</h3>
+  <div id='quantityConnected'></div>
+  <h3>Genêro do filme</h3>
+  <select id='selectedGenre'>
+  </select>
+  <button id='sendGenreButton' name="button" onclick="sendGenre()">Send</button>
+  <h2>Mensagens:</h2>
+  <div id='messages'></div>
+  <div id='result'>
+  </div>
+
+  <script>
+    const sioServerURL = 'http://localhost:3000';
+    const socket = io(sioServerURL);
+
+      const messages = document.getElementById('messages');
+      const motd = document.getElementById('motd');
+
+      function sendGenre() {
+        const dropdown = document.getElementById('selectedGenre');
+        const selected = dropdown.options[dropdown.selectedIndex];
+        const selectedId = selected.id;
+        console.log(selectedId);
+        socket.emit('selectGenre', selectedId);
+      }
+
+      socket.on('connect', () => {
+        socket.on('lock', value => {
+          document.getElementById('selectedGenre').disabled = !value;
+          document.getElementById('sendGenreButton').disabled = !value;
+        })
+        socket.on('connectedPeople', qty =>
+          document.getElementById('quantityConnected').innerText = qty
+        );
+
+        socket.on('error', (data) => {
+          if (data.type === 'UnauthorizedError') {
+            motd.textContent = 'Suas credenciais estão inválidas!'
+          }
+        });
+        socket.on('message', data => {
+          document.getElementById('messages').innerText += '\n' + data;
+        })
+        socket.on('movies', data => {
+          const movies = data.results;
+          const movie = movies[0]
+          const poster = 'https://image.tmdb.org/t/p/w500/' + movie.poster_path;
+          const title = movie.title;
+          const overview = movie.overview;
+          const result = document.getElementById('result');
+          result.innerHTML = `
+            <h2>Filme:</h2>
+            <h3>${title}</h3>
+            <img src=${poster} />
+            <h4>Overview:</h4>
+            <h5>${overview}</h5>
+          `;
+        })
+
+        socket.on('genres', (genres) => {
+          console.log(genres);
+          const dropdown = document.getElementById('selectedGenre');
+          genres.map(e => {
+            const option = document.createElement('option');
+            option.id = e.id;
+            option.text = e.name;
+            dropdown.add(option);
+            return option;
+          })
+        })
+    });
+  </script>
+</body>
+
+</html>
