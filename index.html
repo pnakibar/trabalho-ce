@@ -8,18 +8,23 @@
 </head>
 
 <body>
-  <h1>
-    RESOLUÇÃO DE PROBLEMAS DE FILMES
-  </h1>
-  <h3>Pessoas conectadas:</h3>
-  <div id='quantityConnected'></div>
-  <h3>Genêro do filme</h3>
-  <select id='selectedGenre'>
-  </select>
-  <button id='sendGenreButton' name="button" onclick="sendGenre()">Send</button>
-  <h2>Mensagens:</h2>
-  <div id='messages'></div>
-  <div id='result'>
+  <div id="container" style="flex-direction: row; display: flex;">
+    <div id="menu">
+      <h1>
+        SELECIONA FILMES 3000
+      </h1>
+      <h3>Pessoas conectadas:</h3>
+      <div id='quantityConnected'></div>
+      <h3>Genêro do filme</h3>
+      <select id='selectedGenre'>
+      </select>
+      <button id='sendGenreButton' name="button" onclick="sendGenre()">Send</button>
+      <h2>Mensagens:</h2>
+      <div id='messages'></div>
+    </div>
+    <div id='result' style="margin-left: 10px;">
+  </div>
+
   <script>
     const sioServerURL = 'http://localhost:3000';
     const socket = io(sioServerURL);
@@ -35,7 +40,7 @@
         const dropdown = document.getElementById('selectedGenre');
         const selected = dropdown.options[dropdown.selectedIndex];
         const selectedId = selected.id;
-        console.log(selectedId);
+        document.getElementById('messages').innerText = '';
         socket.emit('selectGenre', selectedId);
       }
       function changeMovie() {
