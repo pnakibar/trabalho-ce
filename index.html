@@ -20,21 +20,42 @@
   <h2>Mensagens:</h2>
   <div id='messages'></div>
   <div id='result'>
-  </div>
-
   <script>
     const sioServerURL = 'http://localhost:3000';
     const socket = io(sioServerURL);
 
       const messages = document.getElementById('messages');
       const motd = document.getElementById('motd');
+      let moviesSaved = [];
+      let showingMovie = 0;
 
       function sendGenre() {
+        moviesSaved = [];
+        showingMovie = 0;
         const dropdown = document.getElementById('selectedGenre');
         const selected = dropdown.options[dropdown.selectedIndex];
         const selectedId = selected.id;
         console.log(selectedId);
         socket.emit('selectGenre', selectedId);
+      }
+      function changeMovie() {
+        showingMovie += 1;
+        const movie = moviesSaved[showingMovie];
+        const poster = 'https://image.tmdb.org/t/p/w300/' + movie.poster_path;
+        const title = movie.title;
+        const overview = movie.overview;
+        const result = document.getElementById('result');
+        result.innerHTML = getMovieHTML(title, poster, overview);
+      }
+      function getMovieHTML(title, posterURL, overview) {
+        return `
+          <h2>Filme:</h2>
+          <h3>${title}</h3>
+          <img src=${posterURL} />
+          <h4>Overview:</h4>
+          <h5>${overview}</h5>
+          <button onclick="changeMovie()" />Já assisti!</button>
+        `;
       }
 
       socket.on('connect', () => {
@@ -52,26 +73,28 @@
           }
         });
         socket.on('message', data => {
-          document.getElementById('messages').innerText += '\n' + data;
+          document.getElementById('messages').innerText += data + '\n';
         })
         socket.on('movies', data => {
           const movies = data.results;
-          const movie = movies[0]
-          const poster = 'https://image.tmdb.org/t/p/w500/' + movie.poster_path;
+          moviesSaved = movies;
+          const movie = movies[0];
+          const poster = 'https://image.tmdb.org/t/p/w300/' + movie.poster_path;
           const title = movie.title;
           const overview = movie.overview;
           const result = document.getElementById('result');
-          result.innerHTML = `
-            <h2>Filme:</h2>
-            <h3>${title}</h3>
-            <img src=${poster} />
-            <h4>Overview:</h4>
-            <h5>${overview}</h5>
-          `;
-        })
+          result.innerHTML = getMovieHTML(title, poster, overview);
+        });
+        socket.on('movie', data => {
+          const movie = data;
+          const poster = 'https://image.tmdb.org/t/p/w300/' + movie.poster_path;
+          const title = movie.title;
+          const overview = movie.overview;
+          const result = document.getElementById('result');
+          result.innerHTML = getMovieHTML(title, poster, overview);
+        });
 
         socket.on('genres', (genres) => {
-          console.log(genres);
           const dropdown = document.getElementById('selectedGenre');
           genres.map(e => {
             const option = document.createElement('option');

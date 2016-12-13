@@ -46,8 +46,13 @@ io.on('connection', (socket) => {
       searchMovies(selectedGenres.map(x => x.genreid))
         .then(result => {
           canSelectGenre = true;
-          socket.emit('lock', canSelectGenre);
-          socket.emit('movies', result);
+          io.emit('lock', canSelectGenre);
+          const moviesSelected = result.results;
+          io.emit('movie', moviesSelected[0]);
+          moviesSelected.forEach((x, i) => {
+            io.emit('message', `Fim da rodada ${i}`);
+          });
+          io.emit('message', 'Filme selecionado!');
           selectedGenres = [];
         });
     }
@@ -56,7 +61,11 @@ io.on('connection', (socket) => {
   socket.on('sent message', (message) => {
     io.emit('new message', message);
   });
-  socket.on('disconnect', () => { connectedPeople = connectedPeople - 1; });
+  socket.on('disconnect', () => {
+    selectedGenres = selectedGenres.filter(e => e.userid === userid);
+    connectedPeople = connectedPeople - 1;
+    io.emit('connectedPeople', connectedPeople);
+  });
 });
 
 
